@@ -1,0 +1,450 @@
+{% load staticfiles %}
+{% load tagi %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../../static/css/test.css">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script type="text/javascript" src="{% static 'libs/jquery.tablesorter.js' %}"></script>
+    <script type="text/javascript" src="{% static "filtruj_ajax.js" %}"></script>
+    <script type="text/javascript" src="{% static "edycja.js" %}"></script>
+    <script type="text/javascript">
+        /*Skrypt odpowiadający za rysowanie i obsługę mapy Polski.
+            Stworzony na podstawie dokumentacji Google geo charts.
+            Do działania potrzebuje być online. */
+
+        //Wczytaj pakiet mapowy
+        google.charts.load('current', {'packages':['geochart']});
+        google.charts.setOnLoadCallback(drawRegionsMap);
+
+        function drawRegionsMap() {
+
+            //Wczytaj dane do wizualizacji
+            var data = google.visualization.arrayToDataTable([
+                 //Kandydaci
+                ['States', '{{ kandydat1 }}', '{{ kandydat2 }}'],
+                //Wyniki wyborów dla poszczególnych województw
+                ['PL-DS', {% get_procent_1 lista 'dolnośląskie' %} ,
+                    100 - {% get_procent_1 lista 'dolnośląskie' %}],
+                ['PL-KP', {% get_procent_1 lista 'kujawsko-pomorskie' %} ,
+                    100 - {% get_procent_1 lista 'kujawsko-pomorskie' %}],
+                ['PL-LU', {% get_procent_1 lista 'lubelskie' %} ,
+                    100 - {% get_procent_1 lista 'lubelskie' %}],
+                ['PL-LB', {% get_procent_1 lista 'lubuskie' %} ,
+                    100 - {% get_procent_1 lista 'lubuskie' %}],
+                ['PL-LD', {% get_procent_1 lista 'łódzkie' %} ,
+                    100 - {% get_procent_1 lista 'łódzkie' %}],
+                ['PL-MA', {% get_procent_1 lista 'małopolskie' %} ,
+                    100 - {% get_procent_1 lista 'małopolskie' %}],
+                ['PL-MZ', {% get_procent_1 lista 'mazowieckie' %} ,
+                    100 - {% get_procent_1 lista 'mazowieckie' %}],
+                ['PL-OP', {% get_procent_1 lista 'opolskie' %} ,
+                    100 - {% get_procent_1 lista 'opolskie' %}],
+                ['PL-PK', {% get_procent_1 lista 'podkarpackie' %} ,
+                    100 - {% get_procent_1 lista 'podkarpackie' %}],
+                ['PL-PD', {% get_procent_1 lista 'podlaskie' %}
+                    ,100 - {% get_procent_1 lista 'podlaskie' %}],
+                ['PL-PM', {% get_procent_1 lista 'pomorskie' %} ,
+                    100 - {% get_procent_1 lista 'pomorskie' %}],
+                ['PL-SL', {% get_procent_1 lista 'śląskie' %} ,
+                    100 - {% get_procent_1 lista 'śląskie' %}],
+                ['PL-SK', {% get_procent_1 lista 'świętokrzyskie' %} ,
+                    100 - {% get_procent_1 lista 'świętokrzyskie' %}],
+                ['PL-WN', {% get_procent_1 lista 'warmińsko-mazurskie' %} ,
+                    100 - {% get_procent_1 lista 'warmińsko-mazurskie' %}],
+                ['PL-WP', {% get_procent_1 lista 'wielkopolskie' %} ,
+                    100 - {% get_procent_1 lista 'wielkopolskie' %}],
+                ['PL-ZP', {% get_procent_1 lista 'zachodniopomorskie' %} ,
+                    100 - {% get_procent_1 lista 'zachodniopomorskie' %}]
+            ]);
+
+            //Ustawienia mapy
+            var options = {
+                region: 'PL',
+                dataMode: 'regions',
+                resolution: 'provinces',//Wyświetlaj województwa
+                keepAspectRatio: 'false',
+                height: '355px',
+                width:'650px',
+                enableRegionInteractivity:'true',
+                tooltip: {textStyle: {color: '#FF0000'}, showColorCode: true},
+                colorAxis: {minValue: 0, maxValue: 100, colors: //Skala kolorów
+                        ['#ce6800', '#fe9020','#ffb554','#ffdb70','#beffa7',  '#cce3ff', '#cce3ff', '#003575']},
+            };
+            var chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
+            //Wyświetl wykres
+            chart.draw(data, options);
+        }
+    </script>
+    <script>
+        $(document).ready(function() {
+
+
+            $('#pasek_login span').click(function () {
+                $('.tlo_okno').show();
+                $('#logowanie_okno').show();
+            });
+            $('#logowanie_okno span').click(function()
+            {
+               $('.tlo_okno').hide();
+               $('#logowanie_okno').hide();
+            });
+             $('#edycja_danych span').click(function () {
+                $('.tlo_okno').hide();
+                $('#edycja_danych').hide();
+                $('#edycja_danych').find("tr:not(:first)").remove();
+                location.reload();
+            });
+        });
+    </script>
+    <script type="text/javascript">
+        //Skrypt odpwoqwiedzialny za sortowanie tabeli z wynikami
+       $(document).ready(function() {
+    // call the tablesorter plugin
+    $("#tablica_wyniki").tablesorter({
+        // sort on the first column and third column, order asc
+        sortList: [[0,0],[2,0]]
+    });
+    });
+    </script>
+</head>
+<body>
+<div class="tlo_okno"></div>
+ <div id="logowanie_okno">
+     <span>x</span>
+     <form action="login/" method="post" onsubmit="logowanie_alert()">
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit" value="Loguj" />
+    </form>
+ </div>
+
+<a name="gora"></a>
+<div id="blok">
+    <header>
+        <div id="pasek_login">
+            {% if request.user.is_authenticated %}
+                Aktualnie zalogowany użytkownik: {{ zalogowany }} <button onclick="wyloguj()">Wyloguj się</button>
+            {% else %}
+                Niezalogowany użytkownik!  <span>Zaloguj się</span>
+            {% endif %}
+        </div>
+        <div id="pasek_gora">
+            <div id="flagi">
+                <a href="#"><img src="../../static/pic/flaga_pl.png" alt="Polish version"></a>
+                <a href="#"><img src="../../static/pic/flaga_uk.png" alt="English version"></a>
+            </div>
+        </div>
+        <img src="../../static/pic/gora_pic.jpg" alt="[logo]">
+        <nav>
+            <ul>
+                <li>
+                    <a href="maina.html"><img src="../../static/pic/home.png" alt="Main page"> </a>
+                </li>
+                <li>
+                    <a href="http://www.prezydent2005.pkw.gov.pl/index.html">Akty Prawne</a>
+                </li>
+                <li>
+                    <a href="http://www.prezydent2005.pkw.gov.pl/PZT/PL/AKTY_PRAWNE/ustawy/index.html">Dokumenty</a>
+                </li>
+                <li>
+                    <a href="http://www.prezydent2005.pkw.gov.pl/PZT/PL/DOKUMENTY/obwieszczenia/index.html">Organy wyborcze</a>
+                </li>
+                <li>
+                    <a href="http://www.prezydent2005.pkw.gov.pl/PZT/PL/KOMITETY/kan.html">Kandydaci</a>
+                </li>
+                <li>
+                    <a href="http://www.prezydent2005.pkw.gov.pl/PZT/PL/WYN/F/index.htm">Frekwencja</a>
+                </li>
+                <li>
+                    <a href="">Wyniki</a>
+                </li>
+                <li >
+                    <a href="http://www.wybory2005.pkw.gov.pl/PZT1/PL/WYN/W/index.htm">Pierwsze głosowanie</a>
+                </li>
+                <li>
+                    <a href="http://www.wybory2005.pkw.gov.pl/SJM/PL/WYN/M/index.htm">SEJM</a>
+                </li>
+                <li>
+                    <a href="http://www.wybory2005.pkw.gov.pl/SNT/PL/WYN/M/index.htm">SENAT</a>
+                </li>
+                <li>
+                    <a href="">Wykonawca</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <section>
+        <h1>Wyniki głosowania</h1>
+
+    <div id="mapa"><h3>Porównanie wyników głosowania na kandydatów</h3>
+        <div id="regions_div" class="mapa_styl" style="overflow: hidden;"></div>
+        <div id="stat">
+            <table>
+                <tr>
+                    <th>
+                        POLSKA
+                    </th>
+                </tr>
+
+                <tr>
+                    <th>
+                       Statystyka, stan na 30.06.2005
+                    </th>
+                </tr>
+                <tr>
+                    <td>
+                       Liczba mieszkańców: <span>{{ mieszkancy }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Powierzchnia: <span>312685 km2</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                       Zaludnienie:	<span>{% dzielenie mieszkancy 312685 %} os/km2</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        Zbiorcze wyniki głosowania
+                    </th>
+                </tr>
+                <tr>
+                    <td>
+                        Liczba uprawnionych: <span>{{ uprawnieni }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Liczba wydanych kart: <span>{{ karty_wydane }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Liczba głosów oddanych: <span>{{ glosy_suma }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Liczba głosów ważnych: <span>{{ glosy_wazne }}</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div id="kontener_boczny">
+        <div id="linki">
+            <h5> Zobacz także:</h5>
+            <ul>
+                <li><a href="http://www.prezydent2005.pkw.gov.pl/PZT/PL/WYN/F/index.htm"> Frekwencja</a></li>
+                <li><a href="http://www.prezydent2005.pkw.gov.pl/PZT/PL/WYN/W/149901.htm">Wyniki głosowania zagranicą</a></li>
+                <li><a href="">Porównanie wyników głosowania na kandydatów w zależności od siedziby komisji obwodowe</a></li>
+            </ul>
+            <h5>Szczegółowe wyniki głosowania na kandydatów:</h5>
+             <ul>
+                <li><a href="">{{ kandydat1 }}</a></li>
+                <li><a href="">{{ kandydat2 }}</a></li>
+            </ul>
+        </div>
+        <div id="versus">
+            <h3>{{ kandydat1 }}</h3>
+            <span>
+                <div class="pasek_procentowy" style="background-color:red;width:{{ procentowo_1 }}%;"></div>
+            </span>
+            <h4 style="margin:5px; display: inline;">{{ kand1_suma }}</h4>
+            <h4 style="margin:5px;display: inline;">{{ procentowo_1 }}%</h4>
+            <h3>{{ kandydat2 }}</h3>
+            <span>
+            <div class="pasek_procentowy" style="background-color:blue;width:{{ procentowo_2 }}%;"></div>
+            </span>
+            <h4 style="margin:5px; display: inline;">{{ kand2_suma }}</h4>
+            <h4 style="margin:5px;display: inline;">{{ procentowo_2 }}%</h4>
+        </div>
+    </div>
+
+    <div style="clear: both"></div>
+    </section>
+    <section>
+        <h3>
+            Porównanie wyników głosowania na kandydatów
+        </h3>
+         <table id="tablica_wyniki" class="tablesorter">
+                <thead>
+                    <tr style="border:solid 1px black; border-collapse: separate;">
+                        <th rowspan="3">Nr</th>
+                        <th rowspan="3">Nazwa</th>
+                        <th rowspan="3">Liczba głosów <br>ważnych</th>
+                        <td colspan="2">{{ kandydat1 }}</td>
+                        <th rowspan="3">Liczba głosów:<br> na kandydata / ważnych [%]</th>
+                        <td colspan="2">{{ kandydat2 }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">głosów na kandydata</td>
+                        <td colspan="2">głosów na kandydata</td>
+
+                    </tr>
+
+                   <tr>
+                       <th>liczba</th>
+                       <th>%</th>
+                        <th>liczba</th>
+                       <th>%</th>
+
+                   </tr>
+                </thead>
+                <tbody >
+                    {% for wojewoda in woj %}
+                        <tr style="text-align:right; ">
+                            <td style="border:solid 1px black;  " class ="ukryj x-small">{{ wojewoda.numer }}</td>
+                            <td class="small_tab" style="border:solid 1px black; text-align:left;}">
+                                {{ wojewoda.nazwa }}
+                            </td>
+                            <td class ="x-small" style="border:solid 1px black; ">
+                                {% get_wazne lista wojewoda.nazwa %}
+                            </td>
+                            <td class ="x-small" style="border:solid 1px black; ">
+                                {% get_kand_1 lista wojewoda.nazwa %}
+                            </td>
+                            <td style="border:solid 1px black; ">
+                                {% get_procent_1 lista wojewoda.nazwa %}
+                            </td>
+                            <td style="border:solid 1px black; padding:2px; ">
+                                <p style="display: none;">{% get_procent_1 lista wojewoda.nazwa %}</p>
+                                <div class ="pasek_procentowy_tab" style="background-color:red;width:{% get_procent_1 lista wojewoda.nazwa %}%;">
+                                </div>
+                                 <div class ="pasek_procentowy_tab" style="background-color:blue;width:{% get_procent_2 lista wojewoda.nazwa %}%;">
+                                </div>
+                            </td>
+                            <td  class ="x-small" style="border:solid 1px black; ">
+                                {% get_kand_2 lista wojewoda.nazwa %}
+                            </td>
+                            <td style="border:solid 1px black; ">
+                                {% get_procent_2 lista wojewoda.nazwa %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tr>
+                        <td>
+                            Σ
+                        </td>
+                        <td>
+                            Polska
+                        </td>
+                        <td>
+                            {{ glosy_wazne }}
+                        </td>
+                        <td>
+                            {{ kand1_suma }}
+                        </td>
+                        <td>
+                            {{ procentowo_1 }}
+                        </td>
+                        <td>
+                            <div class ="pasek_procentowy_tab" style="background-color:red;width:{{ procentowo_1 }}%;">
+                                </div>
+                                 <div class ="pasek_procentowy_tab" style="background-color:blue;width:{{ procentowo_2 }}%;">
+                                </div>
+                        </td>
+                        <td>
+                            {{ kand2_suma }}
+                        </td>
+                        <td>
+                           {{ procentowo_2 }}
+                        </td>
+                    </tr>
+            </table>
+    </section>
+    <div id="filtr">
+        Wybierz wojewodztwo: <select id="wojewodztwo">
+        <option value="dowolne">dowolne</option>
+            {% for wojewoda in woj %}
+                <option value="{{ wojewoda.nazwa }}">{{ wojewoda.nazwa }}</option>
+            {% endfor %}
+        </select>
+
+      Wybierz rodzaj gminy: <select id="gmina">
+        <option value="dowolne">dowolny</option>
+        {% for i in  rodzaj %}
+            <option value="{{ i }}">{{ i }}</option>
+        {% endfor %}
+    </select><br>
+    Liczba mieszkańców:
+    od: <input type="number" name="min" id="min">
+    do: <input type="number" name="max" id="max" >
+    {% if request.user.is_authenticated %}
+        <button id="filtruj_button" onclick="filtruj_dane(true)">Pokaż</button>
+    {% else %}
+        <button   id="filtruj_button" onclick="filtruj_dane(false)">Pokaż</button>
+    {% endif %}
+    </div>
+    <div id ="edycja_danych">
+        <span>x</span>
+        <table id="tbl">
+            <thead>
+                <tr>
+                    <td>Gmina</td>
+                    <td>Liczba mieszkańców</td>
+                    <td>Liczba uprawnionych</td>
+                    <td>Liczba wydanych kart</td>
+                    <td>Liczba głosów ważnych</td>
+                    <td>Głosów na kandydata</td>
+                    <td>Kanydat</td>
+                </tr>
+            </thead>
+</table>
+    </div>
+    <nav>
+            <ul>
+                <li>
+                    <a href="maina.html"><img src="../../static/pic/home.png" alt="main page"> </a>
+                </li>
+                <li>
+                    <a href="http://www.prezydent2005.pkw.gov.pl/index.html">Akty Prawne</a>
+                </li>
+                <li>
+                    <a href="http://www.prezydent2005.pkw.gov.pl/PZT/PL/AKTY_PRAWNE/ustawy/index.html">Dokumenty</a>
+                </li>
+                <li>
+                    <a href="http://www.prezydent2005.pkw.gov.pl/PZT/PL/DOKUMENTY/obwieszczenia/index.html">Organy wyborcze</a>
+                </li>
+                <li>
+                    <a href="http://www.prezydent2005.pkw.gov.pl/PZT/PL/KOMITETY/kan.html">Kandydaci</a>
+                </li>
+                <li>
+                    <a href="http://www.prezydent2005.pkw.gov.pl/PZT/PL/WYN/F/index.htm">Frekwencja</a>
+                </li>
+                <li>
+                    <a href="">Wyniki</a>
+                </li>
+                <li >
+                    <a href="http://www.wybory2005.pkw.gov.pl/PZT1/PL/WYN/W/index.htm">Pierwsze głosowanie</a>
+                </li>
+                <li>
+                    <a href="http://www.wybory2005.pkw.gov.pl/SJM/PL/WYN/M/index.htm">SEJM</a>
+                </li>
+                <li>
+                    <a href="http://www.wybory2005.pkw.gov.pl/SNT/PL/WYN/M/index.htm">SENAT</a>
+                </li>
+                <li>
+                    <a href="">Wykonawca</a>
+                </li>
+            </ul>
+        </nav>
+    <footer>
+        <h6 style="float: left; display: inline; margin: 0px;">  Wykonanie Michał Jaroń</h6>
+        <a href="#gora" style="display: inline; float: right;">&#8593 W górę </a>
+    </footer>
+</div>
+</body>
+</html>
